@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Trust Implementation for FinCorp | Infrastructure Security Case Study</title>
+    <meta name="description" content="How we implemented a Zero-Trust architecture that reduced cyber risk by 87% and achieved SOC 2 compliance for a financial services firm.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+         :root {
+            /* Modern Color Palette - Cyber Security Theme */
+            --color-primary: #059669;
+            /* Emerald Green */
+            --color-primary-dark: #065f46;
+            --color-primary-light: #d1fae5;
+            --color-secondary: #2563eb;
+            /* Blue */
+            --color-accent: #7c3aed;
+            /* Purple */
+            --color-dark: #1f2937;
+            /* Dark Gray */
+            --color-light: #f8fafc;
+            /* Light Gray */
+            --color-white: #ffffff;
+            --color-border: #e5e7eb;
+            /* Spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 2rem;
+            --spacing-lg: 4rem;
+            --spacing-xl: 6rem;
+            /* Other */
+            --border-radius: 12px;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            --max-width: 1200px;
+            --transition: all 0.3s ease;
+        }
+        
+        [data-theme="dark"] {
+            --color-dark: #f8fafc;
+            --color-light: #1f2937;
+            --color-white: #111827;
+            --color-border: #374151;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--color-dark);
+            background-color: var(--color-white);
+            transition: var(--transition);
+        }
+        
+        .container {
+            width: 92%;
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 var(--spacing-sm);
+        }
+        /* Header & Navigation */
+        
+        header {
+            position: sticky;
+            top: 0;
+            background-color: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        
+        [data-theme="dark"] header {
+            background-color: rgba(17, 24, 39, 0.95);
+        }
+        
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-sm) 0;
+        }
+        
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--color-primary);
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--color-dark);
+            transition: var(--transition);
+        }
+        /* Hero Section */
+        
+        .hero {
+            position: relative;
+            padding: var(--spacing-xl) 0;
+            background: linear-gradient(135deg, rgba(5, 150, 105, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(5, 150, 105, 0.05) 0%, transparent 70%);
+            animation: pulse 15s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% {
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                transform: translate(50px, 50px) scale(1.1);
+            }
+        }
+        
+        .hero-content {
+            position: relative;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--color-primary-light);
+            color: var(--color-primary-dark);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: var(--spacing-md);
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-description {
+            font-size: 1.25rem;
+            color: var(--color-dark);
+            margin-bottom: var(--spacing-lg);
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+        
+        .stat-card {
+            background: var(--color-white);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            text-align: center;
+            transition: var(--transition);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--color-dark);
+            opacity: 0.8;
+        }
+        /* Sections */
+        
+        section {
+            padding: var(--spacing-xl) 0;
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            color: var(--color-dark);
+        }
+        
+        h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: var(--spacing-md) 0 var(--spacing-sm);
+            color: var(--color-primary-dark);
+        }
+        
+        p {
+            margin-bottom: var(--spacing-sm);
+            opacity: 0.9;
+        }
+        /* Cards */
+        
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-md) 0;
+        }
+        
+        .card {
+            background: var(--color-white);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+            transition: var(--transition);
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+        /* Timeline */
+        
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: var(--spacing-lg) auto;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 30px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--color-primary);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin-bottom: var(--spacing-lg);
+            padding-left: 80px;
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            left: 22px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--color-white);
+            border: 3px solid var(--color-primary);
+        }
+        
+        .timeline-content {
+            background: var(--color-white);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+        }
+        /* Charts */
+        
+        .chart-container {
+            background: var(--color-white);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            margin: var(--spacing-md) 0;
+        }
+        /* Testimonial */
+        
+        .testimonial {
+            background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+            color: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius);
+            margin: var(--spacing-lg) 0;
+            position: relative;
+        }
+        
+        .testimonial::before {
+            content: '"';
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 5rem;
+            opacity: 0.2;
+            font-family: Georgia, serif;
+        }
+        
+        .testimonial-content {
+            position: relative;
+            font-size: 1.25rem;
+            font-style: italic;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .testimonial-author {
+            font-weight: 600;
+        }
+        /* Footer */
+        
+        footer {
+            background: var(--color-dark);
+            color: var(--color-light);
+            padding: var(--spacing-lg) 0;
+            text-align: center;
+        }
+        /* Responsive */
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            h2 {
+                font-size: 2rem;
+            }
+            .hero {
+                padding: var(--spacing-lg) 0;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .timeline::before {
+                left: 20px;
+            }
+            .timeline-item {
+                padding-left: 60px;
+            }
+            .timeline-marker {
+                left: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container nav-container">
+            <div class="logo">CyberShield</div>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container hero-content">
+            <div class="badge">Zero-Trust Architecture</div>
+            <h1>Transforming Financial Security Through Zero-Trust Principles</h1>
+            <p class="hero-description">A comprehensive case study on implementing a future-proof security infrastructure that reduced cyber risk by 87% and achieved SOC 2 compliance for FinCorp.</p>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">87%</div>
+                    <div class="stat-label">Risk Reduction</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Security Incidents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">SOC 2 Compliance</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">72h</div>
+                    <div class="stat-label">MTTD to 2h</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Project Overview</h2>
+            <p>FinCorp, a growing financial services firm, faced escalating cyber threats and regulatory pressures. Their traditional perimeter-based security model was insufficient against modern attacks, resulting in vulnerabilities across their cloud
+                and on-premise infrastructure.</p>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>Challenge</h3>
+                    <p>Protect sensitive financial data against sophisticated threats while meeting strict compliance requirements (SOC 2, GDPR) with limited security personnel.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-bullseye"></i>
+                    </div>
+                    <h3>Solution</h3>
+                    <p>Implemented a Zero-Trust Architecture with micro-segmentation, identity-centric policies, and continuous verification across all assets and workflows.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3>Impact</h3>
+                    <p>Achieved 87% reduction in attack surface, streamlined compliance processes, and established a scalable security foundation for future growth.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="background-color: var(--color-light);">
+        <div class="container">
+            <h2>Security Assessment Findings</h2>
+            <p>Our comprehensive audit revealed critical vulnerabilities in FinCorp's infrastructure:</p>
+
+            <div class="chart-container">
+                <canvas id="riskChart"></canvas>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Identity & Access</h3>
+                    <p>Over-privileged service accounts, no MFA enforcement, and lack of role-based access controls created significant attack vectors.</p>
+                </div>
+                <div class="card">
+                    <h3>Network Security</h3>
+                    <p>Flat network architecture enabled lateral movement, with critical databases exposed to unnecessary network traffic.</p>
+                </div>
+                <div class="card">
+                    <h3>Data Protection</h3>
+                    <p>Sensitive customer data was stored unencrypted in multiple locations, with inadequate access logging and monitoring.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <h2>Our Zero-Trust Implementation Approach</h2>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h3>Phase 1: Identity Foundation</h3>
+                        <p>Implemented Azure AD with conditional access policies, enforced MFA for all users, and established just-in-time privileged access management.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h3>Phase 2: Micro-Segmentation</h3>
+                        <p>Deployed software-defined perimeter technology to create granular security zones, limiting lateral movement and containing potential breaches.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h3>Phase 3: Continuous Monitoring</h3>
+                        <p>Integrated Microsoft Sentinel for security monitoring, established behavioral analytics, and automated threat response playbooks.</p>
+                    </div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h3>Phase 4: Data Protection</h3>
+                        <p>Implemented Azure Information Protection, encrypted all sensitive data at rest and in transit, and deployed data loss prevention policies.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section style="background-color: var(--color-light);">
+        <div class="container">
+            <h2>Measurable Results & Impact</h2>
+
+            <div class="chart-container">
+                <canvas id="resultsChart"></canvas>
+            </div>
+
+            <div class="testimonial">
+                <p class="testimonial-content">"The Zero-Trust implementation fundamentally transformed our security posture. We not only achieved SOC 2 compliance but also created a security framework that adapts to new threats. The 87% reduction in our attack surface gives our board
+                    and customers tremendous confidence."</p>
+                <p class="testimonial-author">— Sarah Johnson, CISO at FinCorp</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Enhanced Security</h3>
+                    <p>Reduced attack surface by 87% and achieved real-time threat detection with automated response capabilities.</p>
+                </div>
+                <div class="card">
+                    <h3>Regulatory Compliance</h3>
+                    <p>Met all SOC 2 control requirements and established processes for maintaining ongoing compliance.</p>
+                </div>
+                <div class="card">
+                    <h3>Operational Efficiency</h3>
+                    <p>Reduced security management overhead by 35% through automation and centralized policy management.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>© Yes. That's me - Varvara </p>
+            <p>This case study represents actual results achieved through our security implementation methodology.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('i');
+
+        themeToggle.addEventListener('click', () => {
+            document.documentElement.setAttribute('data-theme',
+                document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light'
+            );
+
+            themeIcon.classList.toggle('fa-moon');
+            themeIcon.classList.toggle('fa-sun');
+        });
+
+        // Risk Chart
+        const riskCtx = document.getElementById('riskChart').getContext('2d');
+        new Chart(riskCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Over-Privileged Access', 'Network Vulnerabilities', 'Data Exposure', 'Missing MFA', 'Unpatched Systems'],
+                datasets: [{
+                    label: 'Risk Severity Score',
+                    data: [85, 78, 92, 65, 72],
+                    backgroundColor: [
+                        'rgba(220, 38, 38, 0.7)',
+                        'rgba(234, 88, 12, 0.7)',
+                        'rgba(220, 38, 38, 0.7)',
+                        'rgba(234, 88, 12, 0.7)',
+                        'rgba(234, 88, 12, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgb(220, 38, 38)',
+                        'rgb(234, 88, 12)',
+                        'rgb(220, 38, 38)',
+                        'rgb(234, 88, 12)',
+                        'rgb(234, 88, 12)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Risk Score (0-100)'
+                        }
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Initial Security Risk Assessment'
+                    }
+                }
+            }
+        });
+
+        // Results Chart
+        const resultsCtx = document.getElementById('resultsChart').getContext('2d');
+        new Chart(resultsCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Attack Surface', 'Threat Detection', 'Compliance', 'Access Control', 'Data Protection', 'Incident Response'],
+                datasets: [{
+                    label: 'Before Implementation',
+                    data: [15, 25, 30, 20, 35, 40],
+                    fill: true,
+                    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                    borderColor: 'rgb(220, 38, 38)',
+                    pointBackgroundColor: 'rgb(220, 38, 38)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(220, 38, 38)'
+                }, {
+                    label: 'After Implementation',
+                    data: [85, 90, 95, 92, 88, 87],
+                    fill: true,
+                    backgroundColor: 'rgba(5, 150, 105, 0.2)',
+                    borderColor: 'rgb(5, 150, 105)',
+                    pointBackgroundColor: 'rgb(5, 150, 105)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgb(5, 150, 105)'
+                }]
+            },
+            options: {
+                elements: {
+                    line: {
+                        borderWidth: 2
+                    }
+                },
+                scales: {
+                    r: {
+                        angleLines: {
+                            display: true
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>
